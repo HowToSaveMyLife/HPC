@@ -85,5 +85,6 @@ int main() {
 	int x = true;
 	int y = 10;
 	cout << x;
+	cout << "123";
 	return 0;
 }
