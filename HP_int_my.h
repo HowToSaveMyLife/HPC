@@ -179,6 +179,11 @@ HP_int HP_int::minus(HP_int& A) {
 			borrow = !(hot_digit->digit - borrow >= 0);
 		}
 	}
+
+	result.del_zeros();
+	hot_digit = lowest_digit;
+	A.hot_digit = A.lowest_digit;
+	result.hot_digit = result.lowest_digit;
 }
 
 HP_int HP_int::operator+(HP_int& A) {
