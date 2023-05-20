@@ -2,7 +2,7 @@
 # include <vector>
 # include <string>
 # include "HP_int_my.h"
-# include <vld.h>
+//# include <vld.h>
 using namespace std;
 
 //class HP_int
@@ -78,18 +78,19 @@ using namespace std;
 
 int main() {
 	HP_int a, b;
-	string s1 = "3", s2 = "2";
-	for (int i = 0; i < 100; i++)
-	{
-		s1 = s1 + "156422";
-		s2 = s2 + "123";
-	}
+	string s1 = "-40", s2 = "19";
+	//for (int i = 0; i < 100; i++)
+	//{
+	//	s1 = s1 + "156422";
+	//	s2 = s2 + "123";
+	//}
 	a = s1;
 	b = s2;
 	HP_int c = a / b;
+	cout << (a < b);
 	c.out();
-	a.free();
-	b.free();
-	c.free();
+	//a.free();
+	//b.free();
+	//c.free();
 	return 0;
 }
