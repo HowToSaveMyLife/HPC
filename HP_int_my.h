@@ -3,6 +3,7 @@
 # include <string>
 using namespace std;
 
+//高精整形的一位
 struct HP_digit {
 	HP_digit* high_digit;
 	HP_digit* low_digit;
@@ -10,23 +11,33 @@ struct HP_digit {
 	HP_digit() { high_digit = NULL; low_digit = NULL; digit = 0; };
 };
 
+//一个高精整形，有长度、符号、最高位、最低位地址
 class HP_int {
 private:
 	int lenth;
 	bool sign;
 	HP_digit* highest_digit;
 	HP_digit* lowest_digit;
-	HP_digit* hot_digit;
+	HP_digit* hot_digit;	//便于实现各种操作的指针
 public:
-	HP_int();
-	void operator=(string& s);
+	HP_int();							//构造函数
+	~HP_int();
+	void operator=(string& s);			//用字符串为高精整形赋值
+	void copy(HP_int A);				//拷贝一份，数据另存一份
 	void operator=(HP_int A);
-	void free();
-	void out();
-	void del_zeros();
-	HP_int add(HP_int& A);
+	void free();						//释放所有的HP_digit
+	void out();							//输出高精整形
+	void del_zeros();					//删除高位的零
+	bool operator>(HP_int& A);			//高精整形的比较
+	bool operator<(HP_int& A);
+	bool operator==(HP_int& A);
+	bool operator!=(HP_int& A);
+	HP_int add(HP_int& A);				//add与minus只实现数值上的加减，不考虑符号，辅助完成高精整形的+-
 	HP_int minus(HP_int& minus);
-	HP_int operator+(HP_int& A);
+	HP_int operator+(HP_int& A);		//高精整形+
+	HP_int operator-(HP_int& A);		//高精整形-
+	HP_int operator*(HP_int& A);		//高精整形*
+	HP_int operator/(HP_int& A);		//高精整形/
 };
 
 HP_int::HP_int() {
@@ -37,7 +48,11 @@ HP_int::HP_int() {
 	hot_digit = NULL;
 }
 
-void HP_int::operator=(string& s) {
+HP_int::~HP_int() {
+	
+}
+
+void HP_int::operator=(string& s) {				//待完善
 	if (lowest_digit != NULL) free();
 	
 	lenth = s.size();
@@ -53,9 +68,11 @@ void HP_int::operator=(string& s) {
 		highest_digit->digit = s[lenth - 1 - i] - 48;
 	}
 	hot_digit = lowest_digit;
+	del_zeros();
 }
 
-void HP_int::operator=(HP_int A) {
+void HP_int::copy(HP_int A) {
+	free();
 	lenth = A.lenth;
 	sign = A.sign;
 
@@ -74,6 +91,15 @@ void HP_int::operator=(HP_int A) {
 		highest_digit->digit = A.hot_digit->digit;
 	}
 	A.hot_digit = A.lowest_digit;
+}
+
+void HP_int::operator=(HP_int A) {
+	free();
+	lenth = A.lenth;
+	sign = A.sign;
+	hot_digit = A.hot_digit;
+	highest_digit = A.highest_digit;
+	lowest_digit = A.lowest_digit;
 }
 
 void HP_int::free() {
@@ -95,12 +121,74 @@ void HP_int::out() {
 }
 
 void HP_int::del_zeros() {
-	if (highest_digit->digit = 0) {
+	if (highest_digit->digit == 0 && highest_digit->low_digit != NULL) {
 		hot_digit = highest_digit->low_digit;
 		delete highest_digit;
-		highest_digit= hot_digit;
+		highest_digit = hot_digit;
+		highest_digit->high_digit = NULL;
+		lenth--;
 		del_zeros();
 	}
+}
+
+bool HP_int::operator>(HP_int& A) {
+	if (lenth > A.lenth) {
+		return true;
+	}
+	else if (lenth < A.lenth) {
+		return false;
+	}
+	else {
+		hot_digit = highest_digit;
+		A.hot_digit = A.highest_digit;
+		if (hot_digit->digit > A.hot_digit->digit) {
+			return true;
+		}
+		else if (hot_digit->digit < A.hot_digit->digit) {
+			return false;
+		}
+
+		for (int i = 1; i < lenth; i++) {
+			hot_digit = hot_digit->low_digit;
+			A.hot_digit = A.hot_digit->low_digit;
+			if (hot_digit->digit > A.hot_digit->digit) {
+				return true;
+			}
+			else if (hot_digit->digit < A.hot_digit->digit) {
+				return false;
+			}
+		}
+		return false;
+	}
+}
+
+bool HP_int::operator<(HP_int& A) {
+	return A > *this;
+}
+
+bool HP_int::operator==(HP_int& A) {
+	if (lenth != A.lenth) {
+		return false;
+	}
+	else {
+		hot_digit = highest_digit;
+		A.hot_digit = A.highest_digit;
+		if (hot_digit->digit != A.hot_digit->digit) {
+			return false;
+		}
+		for (int i = 1; i < lenth; i++) {
+			hot_digit = hot_digit->low_digit;
+			A.hot_digit = A.hot_digit->low_digit;
+			if (hot_digit->digit != A.hot_digit->digit) {
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+bool HP_int::operator!=(HP_int& A) {
+	return !(*this == A);
 }
 
 HP_int HP_int::add(HP_int& A) {
@@ -168,6 +256,7 @@ HP_int HP_int::minus(HP_int& A) {
 		result.highest_digit->low_digit = result.hot_digit;
 		result.hot_digit->high_digit = result.highest_digit;
 		hot_digit = hot_digit->high_digit;
+		result.hot_digit = result.highest_digit;
 
 		if (A.hot_digit->high_digit != NULL) {
 			A.hot_digit = A.hot_digit->high_digit;
@@ -184,30 +273,153 @@ HP_int HP_int::minus(HP_int& A) {
 	hot_digit = lowest_digit;
 	A.hot_digit = A.lowest_digit;
 	result.hot_digit = result.lowest_digit;
+	return result;
 }
 
 HP_int HP_int::operator+(HP_int& A) {
 	HP_int ans;
-	if (sign == A.sign) {							//同负 
+	if (sign == A.sign) {
 		ans = add(A);
 		ans.sign = sign;
 	}
-	else if (this->sign == true && A.sign == false) {					//左正 右负 
-		bigger = *this;
-		smaller = A;
-		smaller.sign = true;
-		ans = (bigger - smaller);
-	}
-	else {																//左负 右正 
-		bigger = *this;
-		smaller = A;
-		bigger.sign = true;
-		ans = (smaller - bigger);
+	else { 
+		if (A > *this) {
+			ans = A.minus(*this);
+			ans.sign = A.sign;
+		}
+		else if (*this > A) {
+			ans = minus(A);
+			ans.sign = sign;
+		}
+		else {
+			ans;
+			ans.lenth = 1;
+			ans.lowest_digit = new HP_digit;
+			ans.highest_digit = ans.lowest_digit;
+			ans.hot_digit = ans.lowest_digit;
+			ans.sign = true;
+		}
 	}
 	return ans;
 }
 
+HP_int HP_int::operator-(HP_int& A) {
+	HP_int ans;
+	if (sign != A.sign) {
+		ans = add(A);
+		ans.sign = sign;
+	}
+	else {
+		if (A > *this) {
+			ans = A.minus(*this);
+			ans.sign = A.sign;
+		}
+		else if (*this > A) {
+			ans = minus(A);
+			ans.sign = sign;
+		}
+		else {
+			ans;
+			ans.lenth = 1;
+			ans.lowest_digit = new HP_digit;
+			ans.highest_digit = ans.lowest_digit;
+			ans.hot_digit = ans.lowest_digit;
+			ans.sign = true;
+		}
+	}
+	return ans;
+}
 
+HP_int HP_int::operator*(HP_int& A) {
+	if (lenth < A.lenth) {
+		return A * *this;
+	}
+	else {
+		HP_int result;
+		result.lowest_digit = new HP_digit;
+		result.highest_digit = result.lowest_digit;
+		result.hot_digit = result.lowest_digit;
+		result.hot_digit->digit = 0;
+		result.sign = (sign == A.sign) ? true : false;
+		result.lenth = 1;
+
+		HP_digit* hot = result.lowest_digit;
+		A.hot_digit = A.lowest_digit;
+		for (int i = 0; A.hot_digit != NULL && i < A.lenth; hot = hot->high_digit, A.hot_digit = A.hot_digit->high_digit, i++) {
+			hot_digit = lowest_digit;
+			result.hot_digit = hot;
+			for (int j = 0; hot_digit != NULL && j < lenth; j++, hot_digit = hot_digit->high_digit) {
+				result.hot_digit->digit += hot_digit->digit * A.hot_digit->digit;
+				if (result.hot_digit->high_digit == NULL) {
+					result.highest_digit = new HP_digit;
+					result.highest_digit->low_digit = result.hot_digit;
+					result.highest_digit->digit = 0;
+					result.hot_digit->high_digit = result.highest_digit;
+					result.lenth++;
+				}
+				result.hot_digit = result.hot_digit->high_digit;
+				result.hot_digit->digit += result.hot_digit->low_digit->digit / 10;
+				result.hot_digit->low_digit->digit = result.hot_digit->low_digit->digit % 10;
+			}
+		}
+
+		result.del_zeros();
+		result.hot_digit = result.lowest_digit;
+		hot_digit = lowest_digit;
+		A.hot_digit = A.lowest_digit;
+		return result;
+	}
+}
+
+HP_int HP_int::operator/(HP_int& A) {
+	if (*this < A) {
+		HP_int ans;
+		string a = "0";
+		ans = a;
+		return ans;
+	}
+	else {
+		HP_int ans;
+		HP_int dividend;
+		dividend.copy(*this);
+
+		ans.lowest_digit = new HP_digit;
+		ans.highest_digit = ans.lowest_digit;
+		ans.hot_digit = ans.lowest_digit;
+		ans.sign = (sign == A.sign) ? true : false;
+		ans.lenth = lenth - A.lenth + 1;
+
+		for (int j = lenth - A.lenth + 1; j > 0; j--) {
+			string q(j, '0');
+			q[0] = 9 + 48;
+			HP_int quotient;
+			quotient = q;
+			HP_int dividend_A;
+			for (; q[0] - 48 > 0; q[0]--, quotient.highest_digit->digit--) {
+				dividend_A = quotient * A;
+				if (!(dividend_A > dividend)) {
+					dividend = dividend - dividend_A;
+					dividend_A.free();
+					break;
+				}
+			}
+			ans.hot_digit->digit = q[0] - 48;
+			ans.lowest_digit = new HP_digit;
+			ans.hot_digit->low_digit = ans.lowest_digit;
+			ans.lowest_digit->high_digit = ans.hot_digit;
+			ans.hot_digit = ans.lowest_digit;
+			quotient.free();
+		}
+
+		dividend.free();
+		ans.lowest_digit = ans.lowest_digit->high_digit;
+		delete ans.hot_digit;
+		ans.hot_digit = ans.lowest_digit;
+		ans.hot_digit->low_digit = NULL;
+
+		return ans;
+	}
+}
 /*
 
 class HP_int
