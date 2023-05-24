@@ -142,8 +142,9 @@
     <ClCompile Include="HPC.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HP_int_a.h" />
-    <ClInclude Include="HP_int_my.h" />
+    <ClInclude Include="HP_complex.h" />
+    <ClInclude Include="HP_fraction.h" />
+    <ClInclude Include="HP_int.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

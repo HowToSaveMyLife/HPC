@@ -1,5 +1,4 @@
 # include <iostream>
-# include <vector>
 # include <string>
 using namespace std;
 
@@ -15,20 +14,20 @@ struct HP_digit {
 class HP_int {
 private:
 	int lenth;
-	bool sign;
 	HP_digit* highest_digit;
 	HP_digit* lowest_digit;
 	HP_digit* hot_digit;	//便于实现各种操作的指针
 public:
+	bool sign;
 	HP_int();							//构造函数
-	~HP_int();
-	void operator=(string& s);			//用字符串为高精整形赋值
-	void copy(HP_int A);				//拷贝一份，数据另存一份
+	~HP_int();							//析构函数为空，当一个高精整形不用时，需要用free()手动释放
+	void operator=(string s);			//用字符串为高精整形赋值，输入时大于0的数s="123"，小于0的数s="-123"，0均可，但只保存为+0
+	void copy(HP_int A);				//拷贝，数据另存一份
 	void operator=(HP_int A);			//仅赋同样的指针
 	void free();						//释放所有的HP_digit
-	void out();							//输出高精整形
+	void out();							//在命令行输出高精整形
 	void del_zeros();					//删除高位的零
-	bool operator>(HP_int& A);			//高精整形的比较
+	bool operator>(HP_int& A);			//高精整形的比较、逻辑运算，均带符号
 	bool operator<(HP_int& A);
 	bool operator==(HP_int& A);
 	bool operator!=(HP_int& A);
@@ -38,6 +37,8 @@ public:
 	HP_int operator-(HP_int& A);		//高精整形-
 	HP_int operator*(HP_int& A);		//高精整形*
 	HP_int operator/(HP_int& A);		//高精整形/
+	HP_int operator%(HP_int& A);		//高精整形%
+	HP_int decimal(HP_int& A, int num);			//仅求小数部分，num为需要保留小数的位数
 };
 
 HP_int::HP_int() {
@@ -52,7 +53,7 @@ HP_int::~HP_int() {
 	
 }
 
-void HP_int::operator=(string& s) {				//待完善
+void HP_int::operator=(string s) {
 	if (lowest_digit != NULL) free();
 
 
@@ -137,6 +138,9 @@ void HP_int::del_zeros() {
 		highest_digit->high_digit = NULL;
 		lenth--;
 		del_zeros();
+	}
+	if (highest_digit->digit == lowest_digit->digit && highest_digit->digit == 0) {
+		sign = true;
 	}
 }
 
@@ -421,6 +425,7 @@ HP_int HP_int::operator/(HP_int& A) {
 					break;
 				}
 			}
+			dividend_A.free();
 			ans.hot_digit->digit = q[0] - 48;
 			ans.lowest_digit = new HP_digit;
 			ans.hot_digit->low_digit = ans.lowest_digit;
@@ -435,6 +440,42 @@ HP_int HP_int::operator/(HP_int& A) {
 	}
 	dividend.free();
 	A.sign = A_sign;
+	ans.del_zeros();
+	return ans;
+}
+
+HP_int HP_int::operator%(HP_int& A) {
+	HP_int temp;
+	HP_int ans;
+	temp = *this / A;
+	temp = temp * A;
+	ans = *this - temp;
+	temp.free();
+	return ans;
+}
+
+HP_int HP_int::decimal(HP_int& A, int num) {
+	for (int i = 0; i < num; i++) {
+		hot_digit = lowest_digit;
+		hot_digit->low_digit = new HP_digit;
+		lowest_digit = hot_digit->low_digit;
+		lowest_digit->high_digit = hot_digit;
+		lowest_digit->digit = 0;
+		lenth++;
+	}
+	hot_digit = lowest_digit;
+
+	HP_int ans;
+	ans = *this / A;
+	while (ans.lenth < num) {
+		ans.hot_digit = ans.highest_digit;
+		ans.hot_digit->high_digit = new HP_digit;
+		ans.highest_digit = ans.hot_digit->high_digit;
+		ans.highest_digit->low_digit = ans.hot_digit;
+		ans.highest_digit->digit = 0;
+		ans.lenth++;
+	}
+	ans.hot_digit = ans.lowest_digit;
 	return ans;
 }
 /*

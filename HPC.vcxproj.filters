@@ -20,10 +20,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HP_int_a.h">
+    <ClInclude Include="HP_int.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="HP_int_my.h">
+    <ClInclude Include="HP_fraction.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="HP_complex.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
